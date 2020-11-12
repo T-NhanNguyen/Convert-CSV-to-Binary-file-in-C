@@ -9,28 +9,27 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-struct parse_structure {
-	char *filename;
-	unsigned int read_point;
-	unsigned int end_point;
-	struct csv_data *preparse_buff;
-	pthread_mutex_t parsing_mtx;
-	int left_side;
-};
-struct csv_data {
+typedef struct data_ll {
 	int data;
-	struct csv_data *next;
-};
-struct read_list {
-	float sensor_value;
-	struct read_list *next;
-};
+	struct data_ll *next;
+} data_link;
 
-static void *thread_operation(void *arg);
-struct csv_data *parse_csv(char *filename);
-unsigned long seek_mid(char *filename, int *start_point);
-void add_to_buffer(struct csv_data **head_ref, float new_data);
-struct csv_data *stich_lists(struct csv_data *first_list, struct csv_data *second_list);
-int write_binfile(char *file_name, struct csv_data *buffer);
-struct csv_data *read_binfile(char *file_name);
-void clear_list(struct read_list **head, struct csv_data **head2, int type);
+typedef struct threaded_args {
+	char *file_name;
+
+	unsigned long read_point;
+	unsigned long end_point;
+	char direction;
+
+	struct data_ll *preparse_buff;
+	pthread_mutex_t parsing_mtx;
+	
+} multi_args;
+
+void clear_list(data_link *head);
+void append_cell(data_link *head_ref, int new_data);
+unsigned long seek_mid(char *file_name, int *start_point);
+data_link *parse_csv(char *file_name);
+data_link *stich_lists(data_link *first_list, data_link *second_list);
+int write_binfile(char *file_name, data_link *buffer);
+data_link *read_binfile(char *file_name);

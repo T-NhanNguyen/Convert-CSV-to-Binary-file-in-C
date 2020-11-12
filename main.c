@@ -7,7 +7,7 @@
 #include <time.h>	// optional library used for timing.
 
 double timing(struct timespec *start, struct timespec *end, int start_end_flag) {
-	double elapsed;
+	double elapsed = 0;
 	if(start_end_flag == 0) {	// start the timer
 		clock_gettime(CLOCK_MONOTONIC, start);
 		return elapsed;
@@ -27,16 +27,35 @@ int main(int argc, char const *argv[]){
 	// optional timing
 	struct timespec start, finish;
 	timing(&start, &finish, 0);
+	
 
-	// main function
-	struct csv_data *parse_buffer = parse_csv(import_csv);
+	// main conversion operation
+	data_link *parse_buffer = parse_csv(import_csv);
 	write_binfile(export_bin, parse_buffer);
-	clear_list(NULL, &parse_buffer, 1);
-
+	
 	// optional timing
 	double elapsed = timing(&start, &finish, 1);
-	printf("Parsing file completed. time elapsed: %lf seconds\n", elapsed);
-
-
+	printf("Conversion completed. time elapsed: %lf seconds\n", elapsed);
+	
+	// quick comparison test
+	data_link *bin_buffer = read_binfile(export_bin);
+	data_link *ptr1 = parse_buffer;
+	data_link *ptr2 = bin_buffer;
+	while(ptr1 != NULL) {
+		if(ptr1->data != ptr2->data) {
+			printf("doesn't match\n");
+			break;
+		}
+		ptr1 = ptr1->next;
+		ptr2 = ptr2->next;
+	}
+	elapsed = timing(&start, &finish, 1) - elapsed;
+	printf("Checking completed. time elapsed: %lf seconds\n", elapsed);
+	
+	// cleaning up
+	clear_list(parse_buffer);
+	clear_list(bin_buffer);
+	ptr1 = NULL;
+	ptr2 = NULL;
 	return 0;
 }
